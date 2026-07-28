@@ -28,6 +28,3 @@ CMakeFiles/
 .idea/
 *.swp
 *.swo
-
-# Claude Code internal settings
-.claude/
