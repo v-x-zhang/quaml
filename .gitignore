@@ -1,0 +1,33 @@
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+
+# Compiled binaries (no extension on Unix)
+compression/encoder/demo
+compression/huffman_encoding/huffman_main
+compression/rect_decomposition/main
+
+# Data files
+*.bin
+*.csv
+*.png
+
+# CMake / build dirs (for when we add CMake later)
+build/
+cmake-build-*/
+CMakeCache.txt
+CMakeFiles/
+
+# macOS
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code internal settings
+.claude/
