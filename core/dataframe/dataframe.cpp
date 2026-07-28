@@ -52,6 +52,19 @@ static size_t exactIndex(const std::vector<int64_t>& ts, int64_t target) {
     return static_cast<size_t>(it - ts.begin());
 }
 
+BarView DataFrame::getNextBar(BarView& thisBar){
+    //given a bar, get the next bar
+    if(!hasNextBar(thisBar)) {
+        throw std::out_of_range("getNextBar: next bar not found");
+    }
+
+    return BarView{*this, thisBar.idx + 1};
+}
+
+bool DataFrame::hasNextBar(BarView& thisBar) const{
+    return thisBar.idx < timestamps.size() - 1;
+}
+
 BarView DataFrame::getBarExact(int64_t ts) {
     return BarView{*this, exactIndex(timestamps, ts)};
 }
