@@ -66,13 +66,25 @@ public:
 
 int main() {
     const std::string csv = "/tmp/quaml_demo.csv";
+    const std::string qml = "/tmp/quaml_demo.qml";
     generateCSV(csv, 100);
 
+    // Load from CSV, save as .qml, reload and verify round-trip.
     DataFrame df;
     df.readCSV(csv);
-    std::cout << "Loaded " << df.timestamps.size() << " bars from " << csv << "\n\n";
+    df.saveQML(qml);
 
-    Feed         feed(df);
+    DataFrame df2;
+    df2.readQML(qml);
+
+    bool ok = (df.timestamps == df2.timestamps &&
+               df.open      == df2.open      &&
+               df.close     == df2.close     &&
+               df.volume    == df2.volume);
+    std::cout << "QML round-trip OK: " << (ok ? "yes" : "NO - MISMATCH") << "\n";
+    std::cout << "Loaded " << df2.timestamps.size() << " bars from " << qml << "\n\n";
+
+    Feed         feed(df2);
     MACrossover  strategy(5, 20);
     Engine       engine(feed, strategy);
 

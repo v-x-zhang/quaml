@@ -27,4 +27,19 @@ Encoded Encode(const std::vector<int32_t>& values);
 // Reconstruct the original sequence from an Encoded result.
 std::vector<int32_t> Decode(const Encoded& enc);
 
+// 64-bit variant — used for timestamps, volume, and bit-reinterpreted doubles.
+struct CodeEntry64 {
+    int64_t     symbol;
+    std::string bits;
+};
+
+struct Encoded64 {
+    int64_t                  base;
+    std::string              bitstream;
+    std::vector<CodeEntry64> codebook;
+};
+
+Encoded64            Encode64(const std::vector<int64_t>& values);
+std::vector<int64_t> Decode64(const Encoded64& enc);
+
 } // namespace quaml
