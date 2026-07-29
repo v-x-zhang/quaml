@@ -2,15 +2,17 @@
 
 #include "../dataframe/dataframe.h"
 
-//we make a feed abstraction so we can have bars or ticks
-class Feed{
+namespace quaml {
+
+class Feed {
     const DataFrame& df;
     size_t cursor = 0;
 
 public:
     Feed(const DataFrame& df);
-    bool hasNext() const;
+    bool    hasNext()  const;
     BarView next();
-    BarView current() const;
-
+    BarView current()  const;
 };
+
+} // namespace quaml

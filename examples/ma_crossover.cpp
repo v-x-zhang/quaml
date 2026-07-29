@@ -2,28 +2,29 @@
 #include <fstream>
 #include "../quaml.h"
 
-// Generates a synthetic OHLCV CSV at the given path for testing.
+using namespace quaml;
+
 static void generateCSV(const std::string& path, int n_bars) {
     std::ofstream f(path);
     f << "timestamp,open,high,low,close,volume\n";
     double price = 100.0;
     for (int i = 0; i < n_bars; i++) {
         double open  = price;
-        double close = price + (i % 7 - 3) * 0.5; // gentle oscillation
+        double close = price + (i % 7 - 3) * 0.5;
         double high  = std::max(open, close) + 0.2;
         double low   = std::min(open, close) - 0.2;
-        f << (1700000000LL + i * 60) << ","  // 1-minute bars
+        f << (1700000000LL + i * 60) << ","
           << open << "," << high << "," << low << "," << close << ","
           << (1000 + i * 10) << "\n";
         price = close;
     }
 }
 
-// Simple moving average crossover: go long when fast MA > slow MA, flat otherwise.
 class MACrossover : public Strategy {
     int fast, slow;
-    std::vector<double> closes;
     int positions = 0;
+    std::vector<double> closes;
+    Broker& broker;
 
     double ma(int period) const {
         double sum = 0;
@@ -33,11 +34,11 @@ class MACrossover : public Strategy {
     }
 
 public:
-    MACrossover(int fast, int slow) : fast(fast), slow(slow) {}
+    MACrossover(int fast, int slow, Broker& broker)
+        : fast(fast), slow(slow), broker(broker) {}
 
     void onStart() override {
-        std::cout << "MA Crossover strategy started (fast=" << fast
-                  << ", slow=" << slow << ")\n";
+        std::cout << "MA Crossover started (fast=" << fast << ", slow=" << slow << ")\n";
     }
 
     void onBar(BarView bar) override {
@@ -48,12 +49,10 @@ public:
         double slowMA = ma(slow);
 
         if (fastMA > slowMA && positions == 0) {
-            std::cout << "  BUY  @ " << bar.close()
-                      << "  (ts=" << bar.timestamp() << ")\n";
+            broker.buy(1, bar.open(), bar.timestamp());
             positions = 1;
         } else if (fastMA < slowMA && positions == 1) {
-            std::cout << "  SELL @ " << bar.close()
-                      << "  (ts=" << bar.timestamp() << ")\n";
+            broker.sell(1, bar.open(), bar.timestamp());
             positions = 0;
         }
     }
@@ -69,7 +68,6 @@ int main() {
     const std::string qml = "/tmp/quaml_demo.qml";
     generateCSV(csv, 100);
 
-    // Load from CSV, save as .qml, reload and verify round-trip.
     DataFrame df;
     df.readCSV(csv);
     df.saveQML(qml);
@@ -78,16 +76,18 @@ int main() {
     df2.readQML(qml);
 
     bool ok = (df.timestamps == df2.timestamps &&
-               df.open      == df2.open      &&
-               df.close     == df2.close     &&
-               df.volume    == df2.volume);
-    std::cout << "QML round-trip OK: " << (ok ? "yes" : "NO - MISMATCH") << "\n";
-    std::cout << "Loaded " << df2.timestamps.size() << " bars from " << qml << "\n\n";
+               df.open       == df2.open       &&
+               df.close      == df2.close      &&
+               df.volume     == df2.volume);
+    std::cout << "QML round-trip OK: " << (ok ? "yes" : "NO") << "\n\n";
 
-    Feed         feed(df2);
-    MACrossover  strategy(5, 20);
-    Engine       engine(feed, strategy);
+    Broker      broker(10000.0);
+    Feed        feed(df2);
+    MACrossover strategy(5, 20, broker);
+    Engine      engine(feed, strategy, broker);
 
-    engine.run();
+    engine.run_and_save("/tmp/backtest.bqml");
+    engine.printStats(252.0);
+
     return 0;
 }

@@ -2,18 +2,29 @@
 
 #include "../feed/feed.h"
 #include "../strategy/strategy.h"
+#include "../broker/broker.h"
+#include "../stats/stats.h"
 #include <string>
+#include <vector>
 
-class Engine{
-private:
+namespace quaml {
 
-    Feed& feed;
+class Engine {
+    Feed&     feed;
     Strategy& strategy;
+    Broker&   broker;
+
+    std::vector<double> equityCurve;
 
 public:
+    Engine(Feed& feed, Strategy& strategy, Broker& broker);
 
-    Engine(Feed& feed, Strategy& strategy);
     void run();
+    void run_and_save(const std::string& outPath);
 
-    void run_and_save(const std::string&); //writes the data to a bqml file - "backtest qml file"
+    const std::vector<double>& getEquityCurve() const { return equityCurve; }
+
+    void printStats(double bars_per_year = 252.0) const;
 };
+
+} // namespace quaml

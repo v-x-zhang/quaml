@@ -6,18 +6,17 @@
 #include <cstddef>
 #include <string_view>
 
+namespace quaml {
+
 class DataFrame;
 
-struct Bar{ //OHLCV
-    int64_t timestamp; //unix ns
-    double open;
-    double high;
-    double low;
-    double close;
+struct Bar {
+    int64_t timestamp;
+    double open, high, low, close;
     int64_t volume;
 };
 
-struct BarView{
+struct BarView {
     const DataFrame& df;
     size_t idx;
 
@@ -31,33 +30,29 @@ struct BarView{
     bool    hasNext()   const;
 };
 
-enum class NearestBarType{
-    Nearest, //get nearest by dist
-    Forward, //get closest by the next ts after this
-    Backward, //get closest by the last ts before this
+enum class NearestBarType {
+    Nearest,
+    Forward,
+    Backward,
 };
 
-class DataFrame{ //Pandas Dataframes do things pretty well.
+class DataFrame {
 public:
     std::vector<int64_t> timestamps;
-    std::vector<double> open, high, low, close;
+    std::vector<double>  open, high, low, close;
     std::vector<int64_t> volume;
 
+    void readCSV(std::string_view csvPath);
+    void readQML(std::string_view qmlPath);
+    void saveQML(std::string_view outPath);
 
-    void readCSV(std::string_view csvPath); //takes in a .csv file and parses line by line.
-    void readQML(std::string_view qmlPath); //takes in a custom .qml file
+    BarView getBarExact(int64_t ts);
+    BarView getBarInexact(int64_t ts);
+    BarView getBarInexact(int64_t ts, NearestBarType type);
+    BarView getNextBar(BarView& thisBar);
+    bool    hasNextBar(BarView& thisBar) const;
 
-    void saveQML(std::string_view outPath); //writes to a specific path
-
-    BarView getBarExact(std::int64_t ts); //gets a specific bar by timestamp
-    BarView getBarInexact(std::int64_t ts); //gets nearest bar to this time (NEAREST DEF)
-    BarView getBarInexact(std::int64_t ts, NearestBarType type); //gets nearest bar to this time
-
-    BarView getNextBar(BarView& thisBar); //returns the bar after this bar.
-    bool hasNextBar(BarView& thisBar) const;
-
-    std::vector<BarView> getBars(std::int64_t begin, std::int64_t end); //gets bars between the time stamps
-
+    std::vector<BarView> getBars(int64_t begin, int64_t end);
 };
 
 // BarView inline definitions — placed here so DataFrame is fully defined.
@@ -69,3 +64,5 @@ inline double  BarView::close()     const { return df.close[idx]; }
 inline int64_t BarView::volume()    const { return df.volume[idx]; }
 inline void    BarView::advance()         { idx++; }
 inline bool    BarView::hasNext()   const { return idx + 1 < df.timestamps.size(); }
+
+} // namespace quaml
