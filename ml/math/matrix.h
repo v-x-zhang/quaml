@@ -16,20 +16,19 @@ struct Matrix {
     double  operator()(int i, int j) const { return data[i * cols + j]; }
 };
 
-// C = A * B  (A: m×k, B: k×n → C: m×n)
+// C = A * B  (A: m×k, B: k×n -> C: m×n)
 Matrix multiply(const Matrix& A, const Matrix& B);
 
-// Returns Aᵀ
+// Returns A transpose
 Matrix transpose(const Matrix& A);
 
-// Returns A⁻¹ via Gaussian elimination with partial pivoting. Throws if singular.
+// Gaussian Elim
 Matrix inverse(const Matrix& A);
 
-// Computes XᵀX directly without materialising Xᵀ. More cache-friendly than
 // multiply(transpose(X), X) for tall matrices.
 Matrix gramMatrix(const Matrix& X);
 
-// Build a Matrix from a list of column vectors (each col must be the same length).
+// Build a Matrix from a list of column vectors (each col must be the same length)
 Matrix fromColumns(const std::vector<std::vector<double>>& cols);
 
 } // namespace quaml::math

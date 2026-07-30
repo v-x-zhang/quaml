@@ -1,1 +1,1 @@
-# C++ Quant Finance Library - compression & backtesting tooling
+# C++ Quant Finance Library - compression, backtesting, & ML tooling

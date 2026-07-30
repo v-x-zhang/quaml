@@ -9,6 +9,7 @@ CORE_OBJS = \
     core/stats/stats.o \
     ml/features/features.o \
     ml/math/matrix.o \
+    ml/linear/ols.o \
     compression/encoder/encoder.o \
     compression/huffman_encoding/huffman.o \
     compression/delta_encode/delta_encode.o
@@ -31,6 +32,7 @@ core/broker/broker.o:       core/broker/broker.cpp       core/broker/broker.h
 core/stats/stats.o:         core/stats/stats.cpp         core/stats/stats.h
 ml/features/features.o:    ml/features/features.cpp     ml/features/features.h
 ml/math/matrix.o:          ml/math/matrix.cpp            ml/math/matrix.h
+ml/linear/ols.o:           ml/linear/ols.cpp             ml/linear/ols.h
 compression/encoder/encoder.o: compression/encoder/encoder.cpp compression/encoder/encoder.h
 compression/huffman_encoding/huffman.o: compression/huffman_encoding/huffman.cpp \
                                         compression/huffman_encoding/huffman.h

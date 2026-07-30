@@ -7,3 +7,5 @@
 #include "core/broker/broker.h"
 #include "core/stats/stats.h"
 #include "ml/features/features.h"
+#include "ml/math/matrix.h"
+#include "ml/linear/ols.h"

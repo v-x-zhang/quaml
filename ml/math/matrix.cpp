@@ -12,8 +12,6 @@ Matrix multiply(const Matrix& A, const Matrix& B) {
 
     Matrix C(A.rows, B.cols);
 
-    // i,k,j loop order: innermost loop is sequential on both C and B rows,
-    // A(i,k) is hoisted by the compiler into a register.
     for (int i = 0; i < A.rows; i++) {
         for (int k = 0; k < A.cols; k++) {
             double aik = A(i, k);
@@ -39,7 +37,6 @@ Matrix inverse(const Matrix& A) {
 
     int n = A.rows;
 
-    // Build augmented matrix [A | I] stored as a flat n × 2n matrix.
     Matrix aug(n, 2 * n);
     for (int i = 0; i < n; i++) {
         for (int j = 0; j < n; j++)
@@ -48,7 +45,6 @@ Matrix inverse(const Matrix& A) {
     }
 
     for (int k = 0; k < n; k++) {
-        // Partial pivoting: find row with max |value| in column k.
         int pivot = k;
         double maxVal = std::abs(aug(k, k));
         for (int i = k + 1; i < n; i++) {
@@ -60,17 +56,17 @@ Matrix inverse(const Matrix& A) {
         if (maxVal < 1e-12)
             throw std::runtime_error("inverse: matrix is singular or near-singular");
 
-        // Swap pivot row with row k (swap entire row across both halves).
+        // Swap pivot row with row k (swap entire row across both halves)
         if (pivot != k)
             for (int j = 0; j < 2 * n; j++)
                 std::swap(aug(k, j), aug(pivot, j));
 
-        // Scale row k so the pivot becomes 1.
+        // Scale row k so the pivot becomes 1
         double scale = aug(k, k);
         for (int j = 0; j < 2 * n; j++)
             aug(k, j) /= scale;
 
-        // Eliminate column k from all other rows.
+        // Eliminate column k from all other rows
         for (int i = 0; i < n; i++) {
             if (i == k) continue;
             double factor = aug(i, k);
@@ -79,7 +75,7 @@ Matrix inverse(const Matrix& A) {
         }
     }
 
-    // Extract the right half as A⁻¹.
+    // Extract the right half as A inverse
     Matrix inv(n, n);
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
@@ -88,7 +84,6 @@ Matrix inverse(const Matrix& A) {
 }
 
 Matrix gramMatrix(const Matrix& X) {
-    // Computes XᵀX (k×k) directly from X (n×k).
     // Inner loop iterates rows of X sequentially — cache-friendly.
     int n = X.rows, k = X.cols;
     Matrix G(k, k);
