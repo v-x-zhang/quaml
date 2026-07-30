@@ -83,7 +83,7 @@ int main() {
 
     Broker      broker(10000.0);
     Feed        feed(df2);
-    MACrossover strategy(5, 20, broker);
+    MACrossover strategy(5, 40, broker);
     Engine      engine(feed, strategy, broker);
 
     engine.run_and_save("/tmp/backtest.bqml");
