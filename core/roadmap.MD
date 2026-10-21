@@ -25,7 +25,9 @@ The engine will be a driver sort of program. It'll facilitate the data loading a
 
 ## Feed
 
-My issue with backtests based on bars is that for high-frequency trading, it happens to be that packet / tick-based trading or I suppose event-driven trading requires a lot more careful work to be done. I'd like to support both, so this includes maybe supporting the protocol unpacking for binary streams of different exchanges. This means we need to support the packet feeds for ITCH5.0, OUCH5.0, and other exchanges as well. 
+My issue with backtests based on bars is that for high-frequency trading, it happens to be that packet / tick-based trading or I suppose event-driven trading requires a lot more careful work to be done. I'd like to support both, so this includes maybe supporting the protocol unpacking for binary streams of different exchanges. This means we need to support the packet feeds for ITCH5.0, OUCH5.0, and other exchanges as well.
+
+On second thought, retail traders can't really trade on ITCH5.0 and OUCH5.0 streams directly without colocating and registering with the exchange, so maybe we'll try to get databento tick-level L3 data simulation to work.
 
 The feed abstraction helps us choose between bar-based "rule-trading strategies" and the event-driven based on packets.
 
