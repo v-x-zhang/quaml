@@ -28,3 +28,17 @@ CMakeFiles/
 .idea/
 *.swp
 *.swo
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Market data
+*.dbn
+*.dbn.zst
+*.parquet
+
+
+local/
