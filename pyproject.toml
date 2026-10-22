@@ -1,0 +1,21 @@
+[build-system]
+requires = ["scikit-build-core>=0.10", "nanobind>=2.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "quaml"
+version = "0.0.1"
+requires-python = ">=3.11"
+dependencies = ["numpy>=2.0"]
+
+[project.optional-dependencies]
+dbn = ["databento>=0.86"]
+test = ["pytest>=8"]
+
+[tool.scikit-build]
+wheel.packages = ["python/quaml"]
+cmake.build-type = "Release"
+build-dir = "build/{wheel_tag}"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
