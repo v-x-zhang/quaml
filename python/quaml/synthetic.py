@@ -23,9 +23,16 @@ def _excel_number(v: float) -> str:
 
 
 def write_synthetic_price_csv(path, n_assets: int = 150, n_days: int = 2520,
-                              seed: int = 0) -> dict:
-    """Write the CSV and return the true daily betas ``{code: (days, beta)}``."""
+                              seed: int = 0, corrupt: bool = False) -> dict:
+    """Write the CSV and return ``{"betas": {code: (days, beta)}, "corruptions": [...]}``.
+
+    With ``corrupt=True`` the file also carries data errors of the kind vendor
+    files have: one split whose adjustment factor was never recorded, and a
+    few single-day bad prints. ``corruptions`` lists them as
+    ``(code, date, kind)``.
+    """
     rng = np.random.default_rng(seed)
+    corruptions = []
     days = np.busday_offset("2010-01-04", np.arange(n_days), roll="forward")
 
     # Market with slowly varying volatility.
@@ -59,12 +66,25 @@ def write_synthetic_price_csv(path, n_assets: int = 150, n_days: int = 2520,
         keep &= rng.random(n_days) > 0.005
 
         factor = np.ones(n_days)
+        split_day = None
         if rng.random() < 0.3:  # one split; earlier rows carry factor 1/ratio
-            factor[: int(rng.integers(n_days // 4, n_days))] = 1 / rng.choice([2, 4, 5])
+            split_day = int(rng.integers(n_days // 4, n_days))
+            factor[:split_day] = 1 / rng.choice([2, 4, 5])
+        close = adj / factor
+        reported_factor = factor.copy()
+        live = np.flatnonzero(keep)
+        visible = split_day is not None and live.min() < split_day <= live.max()
+        if corrupt and visible and not any(c[2] == "missed_split" for c in corruptions):
+            reported_factor[:] = 1.0  # vendor never recorded the split
+            corruptions.append((code, days[live[live >= split_day][0]], "missed_split"))
+        if corrupt and k % 50 == 7 and len(live) > 10:
+            t = int(rng.choice(live[1:-1]))
+            close[t] *= 1.6
+            corruptions.append((code, days[t], "bad_print"))
         volume = rng.lognormal(15, 0.8, n_days)
-        for t in np.flatnonzero(keep):
-            rows.append((code, f"S{k:03d}", days[t], adj[t] / factor[t],
-                         volume[t] * factor[t], factor[t]))
+        for t in live:
+            rows.append((code, f"S{k:03d}", days[t], close[t],
+                         volume[t] * factor[t], reported_factor[t]))
         truth[code] = (days, beta)
 
     order = rng.permutation(len(rows))
@@ -76,4 +96,4 @@ def write_synthetic_price_csv(path, n_assets: int = 150, n_days: int = 2520,
             d = d.astype(object)
             w.writerow([code, sym, f"{d.month}/{d.day}/{d.year}", f"{close:.2f}",
                         _excel_number(vol), f"{fac:g}"])
-    return truth
+    return {"betas": truth, "corruptions": corruptions}

@@ -71,6 +71,12 @@ class Panel:
     def with_columns(self, **new: np.ndarray) -> Panel:
         return replace(self, cols={**self.cols, **{k: np.asarray(v, np.float64) for k, v in new.items()}})
 
+    def until(self, pos: int) -> Panel:
+        """Only calendar days before position ``pos``; later rows do not exist."""
+        keep = self.day < pos
+        return Panel(self.asset[keep], self.day[keep], self.calendar[:pos],
+                     {k: v[keep] for k, v in self.cols.items()})
+
     def shifted(self, values: np.ndarray, k: int) -> np.ndarray:
         """``values`` from ``k`` rows earlier (``k < 0``: later) in the same asset, else NaN."""
         i = np.arange(len(self)) - k
@@ -192,11 +198,15 @@ def add_market(panel: Panel, market_asset: int, col: str, name: str) -> Panel:
     return panel.with_columns(**{name: by_day[panel.day]})
 
 
-def log_returns(panel: Panel, price: str) -> np.ndarray:
-    """``log(p[t] / p[t-1])``; NaN when either price is missing."""
+def log_returns(panel: Panel, price: str, exclude: str | None = "excluded") -> np.ndarray:
+    """``log(p[t] / p[t-1])``; NaN when either price is missing or row ``t`` is
+    marked in the ``exclude`` column (see :func:`quaml.repair.apply_actions`)."""
     p = panel[price]
     with np.errstate(divide="ignore", invalid="ignore"):
-        return np.log(p / panel.shifted(p, 1))
+        r = np.log(p / panel.shifted(p, 1))
+    if exclude is not None and exclude in panel.cols:
+        r[panel[exclude] > 0] = np.nan
+    return r
 
 
 # --- operations ------------------------------------------------------------------------

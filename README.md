@@ -31,13 +31,31 @@ CSV columns: `Code,Symbol,Date,Close,Volume,Adjustment Factor` (dates
 be in the files). Files may be split any way (by year, by ticker) and overlap.
 
 ```
-quaml-forward-beta --csv "data/*.csv" --out predictions.csv
-quaml-forward-beta --synthetic               # demo on generated data
-quaml-forward-beta --help                    # horizon, models, epochs, market symbol...
+quaml-forward-beta --csv "data/*.csv" --jump-report jumps.csv        # 1. find bad data
+quaml-forward-beta --csv "data/*.csv" --actions fixes.csv \
+    --holdout-start 2022-01-03 --out oof.csv                         # 2. develop
+quaml-forward-beta --csv "data/*.csv" --actions fixes.csv \
+    --holdout-start 2022-01-03 --open-holdout "final model"          # 3. score once
+quaml-forward-beta --synthetic --corrupt --auto-repair               # demo
+quaml-forward-beta --help
 ```
 
-It compares persistence (trailing beta), OLS, an MLP and a GRU on purged
-chronological 60/20/20 splits and writes test-period predictions.
+1. **Repair.** The jump detector lists returns too large to be market moves
+   and classifies each as `split_like`, `reverting` (bad print) or
+   `unexplained`, with a suggested fix. Edit the report into a corrections
+   file (`code,date,action,value` with actions `rescale_before`, `bad_price`,
+   `drop_return`) and pass it with `--actions`, or accept every suggestion
+   with `--auto-repair`.
+2. **Develop.** Everything from `--holdout-start` on is removed before any
+   feature is built. Models (persistence, OLS, MLP, GRU) are compared on
+   expanding walk-forward folds, with purged validation blocks for early
+   stopping. Each model's MSE difference against persistence, and of the
+   neural models against OLS, comes with a block-bootstrap 95% interval and a
+   count of folds won.
+3. **Score the holdout once.** `--open-holdout REASON` trains on all
+   development data and scores the sealed period. Openings are logged
+   (`quaml_holdout_log.jsonl`); a second one is refused without
+   `--allow-reopen`.
 
 To build your own features and models, see `quaml.panel`:
 
