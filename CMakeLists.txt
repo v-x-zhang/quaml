@@ -7,7 +7,9 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
 
-find_package(Python 3.11 REQUIRED COMPONENTS Interpreter Development.Module)
+# SKBUILD_SABI_COMPONENT is Development.SABIModule when building an abi3 wheel.
+find_package(Python 3.11 REQUIRED COMPONENTS Interpreter Development.Module
+             ${SKBUILD_SABI_COMPONENT})
 execute_process(
     COMMAND "${Python_EXECUTABLE}" -m nanobind --cmake_dir
     OUTPUT_STRIP_TRAILING_WHITESPACE OUTPUT_VARIABLE nanobind_ROOT)
@@ -38,6 +40,7 @@ else()
     target_compile_options(quaml_events PRIVATE -Wall -Wextra)
 endif()
 
-nanobind_add_module(_core NB_STATIC python/bindings.cpp)
+# STABLE_ABI: on Python >= 3.12 one build serves every later version (abi3).
+nanobind_add_module(_core NB_STATIC STABLE_ABI python/bindings.cpp)
 target_link_libraries(_core PRIVATE quaml_events)
 install(TARGETS _core LIBRARY DESTINATION quaml)

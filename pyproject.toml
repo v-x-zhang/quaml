@@ -9,11 +9,18 @@ requires-python = ">=3.11"
 dependencies = ["numpy>=2.0"]
 
 [project.optional-dependencies]
+panel = ["polars>=1.0"]
+torch = ["torch>=2.2"]
 dbn = ["databento>=0.86"]
 test = ["pytest>=8"]
+all = ["quaml[panel,torch,dbn,test]"]
+
+[project.scripts]
+quaml-forward-beta = "quaml.experiments.forward_beta:main"
 
 [tool.scikit-build]
 wheel.packages = ["python/quaml"]
+wheel.py-api = "cp312"  # abi3 wheel when built on 3.12+; a normal wheel on 3.11
 cmake.build-type = "Release"
 build-dir = "build/{wheel_tag}"
 
